@@ -6,7 +6,128 @@ datasource db {
   provider = "postgresql"
 }
 
-// 1. Enumeraciones
+model User {
+  id               String          @id @default(uuid())
+  nombre           String
+  correo           String          @unique
+  passwordHash     String
+  fotoPerfil       String?
+  googleId         String?
+  creadoEn         DateTime        @default(now())
+  adjuntos         Attachment[]
+  comentarios      Comment[]
+  proyectosCreados Project[]       @relation("ProyectosCreados")
+  proyectos        ProjectMember[]
+  tareasAsignadas  Task[]          @relation("TareasAsignadas")
+  tareasCreadas    Task[]          @relation("TareasCreadas")
+}
+
+model Project {
+  id          String          @id @default(uuid())
+  nombre      String
+  descripcion String?
+  fechaInicio DateTime?
+  fechaFin    DateTime?
+  estado      ProjectState    @default(ACTIVO)
+  color       String?
+  creadoPorId String
+  creadoPor   User            @relation("ProyectosCreados", fields: [creadoPorId], references: [id])
+  miembros    ProjectMember[]
+  sprints     Sprint[]
+  tareas      Task[]
+}
+
+model Sprint {
+  id          String    @id @default(uuid())
+  proyectoId  String
+  nombre      String
+  objetivo    String?
+  fechaInicio DateTime?
+  fechaFin    DateTime?
+  estado      String    @default("Planificado")
+  proyecto    Project   @relation(fields: [proyectoId], references: [id])
+  tareas      Task[]
+}
+
+model Task {
+  id              String       @id @default(uuid())
+  proyectoId      String
+  sprintId        String?
+  titulo          String
+  descripcion     String?
+  estado          String       @default("Backlog")
+  prioridad       TaskPriority @default(MEDIA)
+  asignadoAId     String?
+  creadoPorId     String
+  fechaLimite     DateTime?
+  estimacionHoras Int?
+  columna         String       @default("Backlog")
+  orden           Int          @default(0)
+  adjuntos        Attachment[]
+  comentarios     Comment[]
+  subtareas       Subtask[]
+  asignadoA       User?        @relation("TareasAsignadas", fields: [asignadoAId], references: [id])
+  creadoPor       User         @relation("TareasCreadas", fields: [creadoPorId], references: [id])
+  proyecto        Project      @relation(fields: [proyectoId], references: [id])
+  sprint          Sprint?      @relation(fields: [sprintId], references: [id])
+  etiquetas       TaskTag[]
+}
+
+model ProjectMember {
+  proyectoId String
+  userId     String
+  rol        ProjectRole @default(MIEMBRO)
+  proyecto   Project     @relation(fields: [proyectoId], references: [id])
+  user       User        @relation(fields: [userId], references: [id])
+
+  @@id([proyectoId, userId])
+}
+
+model Subtask {
+  id         String  @id @default(uuid())
+  taskId     String
+  titulo     String
+  completada Boolean @default(false)
+  tarea      Task    @relation(fields: [taskId], references: [id])
+}
+
+model Comment {
+  id       String   @id @default(uuid())
+  taskId   String
+  autorId  String
+  texto    String
+  creadoEn DateTime @default(now())
+  autor    User     @relation(fields: [autorId], references: [id])
+  tarea    Task     @relation(fields: [taskId], references: [id])
+}
+
+model Tag {
+  id     String    @id @default(uuid())
+  nombre String
+  color  String
+  tareas TaskTag[]
+}
+
+model TaskTag {
+  taskId   String
+  tagId    String
+  etiqueta Tag    @relation(fields: [tagId], references: [id])
+  tarea    Task   @relation(fields: [taskId], references: [id])
+
+  @@id([taskId, tagId])
+}
+
+model Attachment {
+  id          String @id @default(uuid())
+  taskId      String
+  url         String
+  nombre      String
+  tipo        String
+  subidoPorId String
+  subidoPor   User   @relation(fields: [subidoPorId], references: [id])
+  tarea       Task   @relation(fields: [taskId], references: [id])
+}
+
 enum ProjectRole {
   OWNER
   ADMIN
@@ -24,142 +145,4 @@ enum TaskPriority {
   MEDIA
   ALTA
   CRITICA
-}
-
-// 2. Entidades Principales
-model User {
-  id               String          @id @default(uuid())
-  nombre           String
-  correo           String          @unique
-  passwordHash     String
-  fotoPerfil       String?         // El '?' significa que es opcional
-  googleId         String?
-  creadoEn         DateTime        @default(now())
-  
-  // Relaciones inversas (requeridas por Prisma)
-  proyectosCreados Project[]       @relation("ProyectosCreados")
-  tareasAsignadas  Task[]          @relation("TareasAsignadas")
-  tareasCreadas    Task[]          @relation("TareasCreadas")
-  proyectos        ProjectMember[]
-  comentarios      Comment[]
-  adjuntos         Attachment[]
-}
-
-model Project {
-  id          String          @id @default(uuid())
-  nombre      String
-  descripcion String?
-  fechaInicio DateTime?
-  fechaFin    DateTime?
-  estado      ProjectState    @default(ACTIVO)
-  color       String?
-  creadoPorId String
-  
-  // Relaciones
-  creadoPor   User            @relation("ProyectosCreados", fields: [creadoPorId], references: [id])
-  sprints     Sprint[]
-  tareas      Task[]
-  miembros    ProjectMember[]
-}
-
-model Sprint {
-  id          String    @id @default(uuid())
-  proyectoId  String
-  nombre      String
-  objetivo    String?
-  fechaInicio DateTime?
-  fechaFin    DateTime?
-  estado      String    @default("Planificado")
-  
-  // Relaciones
-  proyecto    Project   @relation(fields: [proyectoId], references: [id])
-  tareas      Task[]
-}
-
-model Task {
-  id              String       @id @default(uuid())
-  proyectoId      String
-  sprintId        String?      // Opcional, puede estar en el Backlog
-  titulo          String
-  descripcion     String?
-  estado          String       @default("Backlog")
-  prioridad       TaskPriority @default(MEDIA)
-  asignadoAId     String?
-  creadoPorId     String
-  fechaLimite     DateTime?
-  estimacionHoras Int?
-  columna         String       @default("Backlog")
-  orden           Int          @default(0)
-  
-  // Relaciones
-  proyecto        Project      @relation(fields: [proyectoId], references: [id])
-  sprint          Sprint?      @relation(fields: [sprintId], references: [id])
-  asignadoA       User?        @relation("TareasAsignadas", fields: [asignadoAId], references: [id])
-  creadoPor       User         @relation("TareasCreadas", fields: [creadoPorId], references: [id])
-  subtareas       Subtask[]
-  comentarios     Comment[]
-  etiquetas       TaskTag[]
-  adjuntos        Attachment[]
-}
-
-// 3. Entidades Secundarias e Intermedias
-model ProjectMember {
-  proyectoId String
-  userId     String
-  rol        ProjectRole @default(MIEMBRO)
-  
-  proyecto   Project     @relation(fields: [proyectoId], references: [id])
-  user       User        @relation(fields: [userId], references: [id])
-
-  @@id([proyectoId, userId]) // Llave primaria compuesta
-}
-
-model Subtask {
-  id         String  @id @default(uuid())
-  taskId     String
-  titulo     String
-  completada Boolean @default(false)
-  
-  tarea      Task    @relation(fields: [taskId], references: [id])
-}
-
-model Comment {
-  id       String   @id @default(uuid())
-  taskId   String
-  autorId  String
-  texto    String
-  creadoEn DateTime @default(now())
-  
-  tarea    Task     @relation(fields: [taskId], references: [id])
-  autor    User     @relation(fields: [autorId], references: [id])
-}
-
-model Tag {
-  id     String    @id @default(uuid())
-  nombre String
-  color  String
-  
-  tareas TaskTag[]
-}
-
-model TaskTag {
-  taskId String
-  tagId  String
-  
-  tarea  Task   @relation(fields: [taskId], references: [id])
-  etiqueta Tag  @relation(fields: [tagId], references: [id])
-
-  @@id([taskId, tagId])
-}
-
-model Attachment {
-  id        String @id @default(uuid())
-  taskId    String
-  url       String
-  nombre    String
-  tipo      String
-  subidoPorId String
-  
-  tarea     Task   @relation(fields: [taskId], references: [id])
-  subidoPor User   @relation(fields: [subidoPorId], references: [id])
 }
