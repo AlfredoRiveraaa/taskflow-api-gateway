@@ -1,23 +1,29 @@
-import express, { Application, Request, Response } from 'express';
+import express, { Application, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import authRoutes from './modules/auth/auth.routes.js';
+import { authenticateToken } from './middlewares/auth.middleware.js';
+import { AuthRequest } from './types/auth.types.js';
+import projectRoutes from './modules/projects/projects.routes.js';
 
 const app: Application = express();
 
-// Middlewares globales de configuración y seguridad
-app.use(express.json()); 
-app.use(cors());         
-app.use(helmet());       
+app.use(express.json());
+app.use(cors());
+app.use(helmet());
 
-app.use('/api/auth', authRoutes); 
+app.use('/api/auth', authRoutes);
+app.use('/api/projects', projectRoutes);
 
-// Ruta de prueba (Health Check)
-app.get('/api/health', (req: Request, res: Response) => {
-  res.status(200).json({ 
-    estado: 'ok', 
-    mensaje: 'API Gateway de TaskFlow funcionando correctamente' 
+app.get('/api/auth/perfil', authenticateToken, (req: AuthRequest, res: Response) => {
+  res.json({
+    mensaje: 'Bienvenido al área privada',
+    datosUsuario: req.user 
   });
+});
+
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ estado: 'ok', mensaje: 'API Gateway funcionando' });
 });
 
 export default app;
