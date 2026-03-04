@@ -7,6 +7,7 @@ import { AuthRequest } from './types/auth.types.js';
 import projectRoutes from './modules/projects/projects.routes.js';
 import taskRoutes from './modules/tasks/tasks.routes.js';
 import sprintRoutes from './modules/sprints/sprints.routes.js';
+import commentRoutes from './modules/comments/comments.routes.js';
 
 const app: Application = express();
 
@@ -18,6 +19,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/sprints', sprintRoutes);
+app.use('/api/comments', commentRoutes);
 
 app.get('/api/auth/perfil', authenticateToken, (req: AuthRequest, res: Response) => {
   res.json({
