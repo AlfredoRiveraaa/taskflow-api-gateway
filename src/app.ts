@@ -9,6 +9,7 @@ import taskRoutes from './modules/tasks/tasks.routes.js';
 import sprintRoutes from './modules/sprints/sprints.routes.js';
 import commentRoutes from './modules/comments/comments.routes.js';
 import subtaskRoutes from './modules/subtasks/subtasks.routes.js';
+import tagRoutes from './modules/tags/tags.routes.js';
 
 const app: Application = express();
 
@@ -22,6 +23,7 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/sprints', sprintRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/subtasks', subtaskRoutes);
+app.use('/api/tags', tagRoutes);
 
 app.get('/api/auth/perfil', authenticateToken, (req: AuthRequest, res: Response) => {
   res.json({
