@@ -5,6 +5,7 @@ import authRoutes from './modules/auth/auth.routes.js';
 import { authenticateToken } from './middlewares/auth.middleware.js';
 import { AuthRequest } from './types/auth.types.js';
 import projectRoutes from './modules/projects/projects.routes.js';
+import taskRoutes from './modules/tasks/tasks.routes.js';
 
 const app: Application = express();
 
@@ -14,6 +15,7 @@ app.use(helmet());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
+app.use('/api/tasks', taskRoutes);
 
 app.get('/api/auth/perfil', authenticateToken, (req: AuthRequest, res: Response) => {
   res.json({
