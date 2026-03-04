@@ -58,7 +58,7 @@ export const getTasksByProject = async (req: AuthRequest, res: Response): Promis
 export const updateTask = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { titulo, descripcion, estado, prioridad, columna, asignadoAId } = req.body;
+    const { titulo, descripcion, estado, prioridad, columna, asignadoAId, sprintId } = req.body;
 
     const tareaActualizada = await prisma.task.update({
       where: { id: id as string },
@@ -68,7 +68,8 @@ export const updateTask = async (req: AuthRequest, res: Response): Promise<void>
         estado,
         prioridad,
         columna,
-        asignadoAId
+        asignadoAId,
+        sprintId
       }
     });
 
