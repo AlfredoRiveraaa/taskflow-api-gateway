@@ -82,3 +82,36 @@ export const updateTask = async (req: AuthRequest, res: Response): Promise<void>
     res.status(500).json({ error: 'Error al actualizar la tarea. Verifica que el ID sea correcto.' });
   }
 };
+
+export const getTaskById = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    const tarea = await prisma.task.findUnique({
+      where: { id: id as string },
+      include: {
+        asignadoA: { select: { nombre: true, correo: true } },
+        creadoPor: { select: { nombre: true } },
+        subtareas: true,
+        comentarios: { 
+          include: { autor: { select: { nombre: true } } },
+          orderBy: { creadoEn: 'desc' }
+        },
+        etiquetas: { 
+          include: { etiqueta: true } 
+        },
+        adjuntos: true
+      }
+    });
+
+    if (!tarea) {
+      res.status(404).json({ error: 'Tarea no encontrada' });
+      return;
+    }
+
+    res.status(200).json(tarea);
+  } catch (error) {
+    console.error('Error al obtener la tarea:', error);
+    res.status(500).json({ error: 'Error al obtener los detalles de la tarea' });
+  }
+};
