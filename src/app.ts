@@ -11,12 +11,15 @@ import commentRoutes from './modules/comments/comments.routes.js';
 import subtaskRoutes from './modules/subtasks/subtasks.routes.js';
 import tagRoutes from './modules/tags/tags.routes.js';
 import attachmentRoutes from './modules/attachments/attachments.routes.js';
+import { setupSwagger } from './utils/swagger.js';
 
 const app: Application = express();
 
 app.use(express.json());
 app.use(cors());
 app.use(helmet());
+
+setupSwagger(app);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
